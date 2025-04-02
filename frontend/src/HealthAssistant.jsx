@@ -20,7 +20,8 @@ const HealthAssistant = () => {
   });
   const messagesEndRef = useRef(null);
 
-  const API_BASE = 'http://localhost:5000/api';
+  // const API_BASE = 'http://localhost:5000/api';
+  const API_BASE = import.meta.env.VITE_API
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

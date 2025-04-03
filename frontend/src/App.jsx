@@ -4,6 +4,7 @@ import EDU from './EDU';
 import HERO from './HERO';
 import { Routes, Route } from "react-router-dom";
 import Header from './Header';
+import RESEARCH from './RESEARCH';
 
 const App = () => {
   return (
@@ -15,6 +16,7 @@ const App = () => {
           <Route path="/" element={<HERO />} />
           <Route path="/health" element={<HealthAssistant />} />
           <Route path="/edu" element={<EDU />} />
+          <Route path="/research" element={<RESEARCH />} />
         </Routes>
       </main>
     </div>

@@ -4,6 +4,8 @@ const axios = require('axios');
 const cors = require('cors');
 const xml2js = require('xml2js');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const path = require('path');
+const re = require('re');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,16 +17,20 @@ const config = {
   arxivTimeout: 10000, // 10 seconds
 };
 
+// API Keys
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyBp6hzVDGsG9X7Ss0TNbqvHDkqcXgoS_M0";
+
 // Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const CURRENT_MODELS = {
-  PRO: 'gemini-1.5-pro-latest',
+  PRO: 'gemini-2.0-pro-exp', // Updated to match the Flask version's model
   FLASH: 'gemini-1.5-flash-latest'
 };
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ==================== Request Tracking & Rate Limiting ====================
 
@@ -59,6 +65,45 @@ const simpleRateLimiter = (req, res, next) => {
 app.use('/api/research', simpleRateLimiter);
 app.use('/api/mental-health-chat', simpleRateLimiter);
 app.use('/api/analyze-symptoms', simpleRateLimiter);
+app.use('/api/chatbot', simpleRateLimiter);
+
+// ==================== Code Response Formatting (From Flask Version) ====================
+
+function formatCodeResponse(userMessage, responseText) {
+  // Expanded list of programming languages
+  const codeKeywords = [
+    'code', 'program', 'function', 'algorithm', 'implementation', 
+    'python', 'javascript', 'java', 'c++', 'c#', 'ruby', 
+    'rust', 'go', 'typescript', 'swift', 'kotlin', 'scala'
+  ];
+  
+  // Check if the query is related to coding
+  const isCodeQuery = codeKeywords.some(keyword => userMessage.toLowerCase().includes(keyword));
+  
+  if (isCodeQuery) {
+    // Extract code block using regex with language-agnostic approach
+    const codeRegex = /```(\w+)?\n(.*?)```/s;
+    const codeMatch = responseText.match(codeRegex);
+    
+    if (codeMatch) {
+      const language = codeMatch[1] || 'plaintext';
+      const code = codeMatch[2].trim();
+      
+      // Structured response with code block
+      return `
+<div class="code-response">
+    <div class="code-block">
+        <pre><code class="language-${language}">${code}</code></pre>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+    </div>
+</div>
+      `;
+    }
+  }
+  
+  // If not a code query, return original response
+  return responseText;
+}
 
 // ==================== Utility Functions ====================
 
@@ -252,6 +297,83 @@ async function searchGoogleScholar(query, limit = config.defaultPaperLimit) {
 }
 
 // ==================== API Endpoints ====================
+
+/**
+ * Root endpoint - serve the index.html file
+ */
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+/**
+ * Chatbot endpoint from Flask application
+ */
+app.post('/api/chatbot', async (req, res) => {
+  const data = req.body;
+  const feature = data.feature || '';
+  const userMessage = data.message || '';
+  
+  if (!userMessage) {
+    return res.status(400).json({ response: 'Error: No message provided' });
+  }
+  
+  try {
+    let prompt;
+    
+    // Switch case for different features
+    if (feature === 'syncbot') {
+      // For general queries, especially coding-related
+      prompt = `
+        If the query is related to coding, provide a clean, well-formatted code block using markdown syntax with language identifier.
+        Ensure the code block is enclosed in triple backticks with the language name.
+        If not a coding query, provide a standard informative response.
+
+        Query: ${userMessage}
+      `;
+      const response = await generateAIResponse(prompt);
+      
+      // Format response for code-related queries
+      const formattedResponse = formatCodeResponse(userMessage, response);
+      
+      return res.json({ response: formattedResponse });
+      
+    } else if (feature === 'quizzes') {
+      // Quiz generation
+      prompt = `Generate a 5-question multiple-choice quiz on the topic: ${userMessage}. 
+      Format each question as follows:
+      Q1. [Question Text]
+      a) [Option A]
+      b) [Option B]
+      c) [Option C]
+      d) [Option D]
+      Correct Answer: [Correct Option]`;
+      
+    } else if (feature === 'study-planner') {
+      // Structured study plan
+      prompt = `Create a detailed 1-week study plan for preparing for an exam on ${userMessage}. 
+      Include:
+      - Daily study schedule
+      - Topics to cover each day
+      - Recommended study techniques
+      - Time allocation for each subject/topic
+      - Brief revision strategy`;
+      
+    } else {
+      return res.status(400).json({ response: 'Error: Invalid feature selected' });
+    }
+    
+    // Generate content for non-syncbot features
+    const response = await generateAIResponse(prompt);
+    
+    // Return the generated content
+    return res.json({ response: response.trim() });
+    
+  } catch (error) {
+    // Comprehensive error handling
+    const errorMessage = `An error occurred: ${error.message}`;
+    return res.status(500).json({ response: errorMessage });
+  }
+});
 
 /**
  * Enhanced research endpoint with detailed paper information
@@ -489,10 +611,11 @@ app.get('/health', (req, res) => {
     services: {
       research: 'active',
       mental_health: 'active',
+      chatbot: 'active',
       sources: {
         arxiv: 'available',
         googleScholar: 'simulated',
-        geminiAI: process.env.GEMINI_API_KEY ? 'available' : 'disabled'
+        geminiAI: GEMINI_API_KEY ? 'available' : 'disabled'
       }
     }
   });
@@ -504,6 +627,7 @@ app.use((req, res) => {
     success: false,
     error: 'Endpoint not found',
     availableEndpoints: [
+      'POST /api/chatbot - General-purpose chat, quizzes, and study planner',
       'POST /api/research - Search academic papers',
       'POST /api/mental-health-chat - Mental health support chat',
       'POST /api/analyze-symptoms - Symptom analysis',
@@ -527,6 +651,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log('Available endpoints:');
+  console.log(`- POST /api/chatbot - General-purpose chat, quizzes, and study planner`);
   console.log(`- POST /api/research - Search academic papers (sources: arxiv, googleScholar)`);
   console.log(`- POST /api/mental-health-chat - Mental health support chat`);
   console.log(`- POST /api/analyze-symptoms - Symptom analysis`);

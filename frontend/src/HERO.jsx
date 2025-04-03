@@ -25,7 +25,13 @@ const HERO = () => {
             to="/edu" 
             className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition duration-300"
           >
-            Learn More
+            Education
+          </Link>
+          <Link 
+            to="/research" 
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition duration-300"
+          >
+            Research
           </Link>
         </div>
       </main>

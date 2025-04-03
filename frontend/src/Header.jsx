@@ -53,6 +53,13 @@ const Header = () => {
           >
             Education
           </NavLink>
+          <NavLink
+            to="/research"
+            className={({isActive}) => `block py-2 px-4 ${isActive ? 'text-blue-400' : 'text-white hover:text-blue-300'} transition-colors duration-300`}
+            onClick={() => setIsOpen(false)}
+          >
+            Research
+          </NavLink>
           <div className="md:hidden block py-2 px-4"> {/* Auth for mobile */}
             <Auth />
           </div>

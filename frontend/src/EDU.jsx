@@ -1,251 +1,256 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { 
-  Container, 
-  TextField, 
-  Button, 
-  Card, 
-  CardContent, 
-  Typography, 
-  Checkbox, 
-  FormControlLabel, 
-  CircularProgress,
-  Chip,
-  Box,
-  AppBar,
-  Toolbar,
-  Paper,
-  Alert
-} from '@mui/material';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-});
+import React, { useState, useRef, useEffect } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faRobot, faComments, faPuzzlePiece, faCalendarAlt, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+import Prism from 'prismjs';
+import 'prismjs/themes/prism.css';
+import 'prismjs/components/prism-python';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-java';
 
 function EDU() {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [sources, setSources] = useState({
-    arxiv: true,
-    googleScholar: true
-  });
-  const [error, setError] = useState(null);
-
-  const handleSearch = async () => {
-    if (!query.trim()) {
-      setError('Please enter a search term');
-      return;
+  const [selectedFeature, setSelectedFeature] = useState('syncbot');
+  const [messages, setMessages] = useState([]);
+  const [inputValue, setInputValue] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const chatBoxRef = useRef(null);
+  
+  const features = [
+    {
+      id: 'syncbot',
+      icon: faComments,
+      title: 'AI SyncBot',
+      description: 'Ask any question',
+      placeholder: 'Ask me any question or coding problem!',
+      featureDescription: 'Ask any general questions or coding problems'
+    },
+    {
+      id: 'quizzes',
+      icon: faPuzzlePiece,
+      title: 'Quiz Generator',
+      description: 'Create topic quizzes',
+      placeholder: 'Enter a topic to generate a quiz',
+      featureDescription: 'Enter a topic to generate a quiz'
+    },
+    {
+      id: 'study-planner',
+      icon: faCalendarAlt,
+      title: 'Study Planner',
+      description: 'Exam preparation',
+      placeholder: 'Enter a subject for a customized study plan',
+      featureDescription: 'Enter a subject to get a personalized study plan'
     }
+  ];
+
+  useEffect(() => {
+    if (chatBoxRef.current) {
+      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+    }
+  }, [messages, isTyping]);
+  
+  useEffect(() => {
+    // Apply syntax highlighting after component updates
+    if (messages.length > 0) {
+      Prism.highlightAll();
+    }
+  }, [messages]);
+  
+  const selectFeature = (feature) => {
+    setSelectedFeature(feature.id);
+    setMessages([]);
+  };
+  
+  const handleInputChange = (e) => {
+    setInputValue(e.target.value);
+  };
+  
+  const sendMessage = async () => {
+    if (!inputValue.trim()) return;
     
-    setLoading(true);
-    setResults([]);
-    setError(null);
+    // Add user message
+    const userMessage = {
+      text: inputValue,
+      sender: 'user'
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setInputValue('');
+    setIsTyping(true);
     
     try {
-      const response = await axios.post('http://localhost:5000/api/research', {
-        query: query.trim(),
-        sources: Object.keys(sources).filter(source => sources[source]),
-        limit: 5
+      // Make actual API call to backend
+      const response = await fetch('http://localhost:5000/api/chatbot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          feature: selectedFeature, 
+          message: inputValue 
+        })
       });
       
-      if (response.data.error) {
-        setError(response.data.error);
-      } else {
-        setResults(response.data.papers || []);
+      if (!response.ok) {
+        throw new Error(`Server responded with status: ${response.status}`);
       }
-    } catch (err) {
-      console.error('Search error:', err);
-      setError(err.response?.data?.message || 'Failed to fetch research papers. Please try again.');
+      
+      const data = await response.json();
+      
+      setMessages(prev => [...prev, {
+        text: data.response,
+        sender: 'bot'
+      }]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setMessages(prev => [...prev, {
+        text: `Error: Unable to get response. ${error.message}`,
+        sender: 'bot'
+      }]);
     } finally {
-      setLoading(false);
+      setIsTyping(false);
     }
   };
-
-  const handleSourceChange = (event) => {
-    setSources({
-      ...sources,
-      [event.target.name]: event.target.checked,
-    });
+  
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
   };
-
+  
+  const copyCode = (codeText) => {
+    navigator.clipboard.writeText(codeText)
+      .then(() => {
+        // Could add a toast notification here
+        console.log('Code copied to clipboard');
+      })
+      .catch(err => {
+        console.error('Failed to copy code', err);
+      });
+  };
+  
+  // Function to render message content with code highlighting
+  const renderMessage = (message) => {
+    // Check if the message contains code blocks
+    if (message.text.includes('```')) {
+      const parts = message.text.split(/```(\w+)?\n|```/g);
+      return parts.map((part, index) => {
+        if (index % 3 === 0) {
+          // Regular text
+          return <span key={index}>{part}</span>;
+        } else if (index % 3 === 1) {
+          // Language identifier or empty string
+          return null;
+        } else {
+          // Code block
+          const language = parts[index - 1] || 'javascript';
+          return (
+            <div className="relative bg-gray-900 rounded-lg my-4" key={index}>
+              <button 
+                className="absolute top-2 right-2 bg-indigo-700 hover:bg-indigo-600 text-white text-xs py-1 px-2 rounded transition duration-300"
+                onClick={() => copyCode(part)}
+              >
+                Copy
+              </button>
+              <pre className="m-0 p-4 overflow-x-auto">
+                <code className={`language-${language}`}>
+                  {part}
+                </code>
+              </pre>
+            </div>
+          );
+        }
+      });
+    }
+    
+    // Regular text message
+    return message.text;
+  };
+  
+  const currentFeature = features.find(f => f.id === selectedFeature);
+  
   return (
-    <ThemeProvider theme={theme}>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Academic Research Assistant
-          </Typography>
-        </Toolbar>
-      </AppBar>
+    <div className="max-w-4xl mx-auto p-5">
+      <div className="flex items-center justify-center gap-4 mb-8 text-center">
+        <FontAwesomeIcon icon={faRobot} className="text-4xl text-indigo-600" />
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-700 to-indigo-900 text-transparent bg-clip-text">
+          Synchyper Chatbot
+        </h1>
+      </div>
       
-      <Container maxWidth="md" sx={{ my: 4 }}>
-        <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
-          <Typography variant="h5" component="h2" gutterBottom>
-            Search Academic Publications
-          </Typography>
-          
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+        {features.map(feature => (
+          <div 
+            className={`bg-gray-800 rounded-xl p-5 text-center transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl hover:border-indigo-600 hover:border-2 cursor-pointer border-2 ${
+              selectedFeature === feature.id 
+                ? 'bg-indigo-700 text-white border-indigo-500' 
+                : 'border-transparent'
+            }`}
+            key={feature.id}
+            onClick={() => selectFeature(feature)}
+          >
+            <FontAwesomeIcon icon={feature.icon} className="text-3xl mb-3 text-gray-100" />
+            <h3 className="text-xl font-semibold mb-1">{feature.title}</h3>
+            <p className="text-gray-300">{feature.description}</p>
+          </div>
+        ))}
+      </div>
+      
+      <div className="text-center mb-5 text-gray-200 animate-fadeIn">
+        {currentFeature.featureDescription}
+      </div>
+      
+      <div className="bg-gray-800 rounded-xl p-5 shadow-lg">
+        <div 
+          ref={chatBoxRef} 
+          className="h-96 overflow-y-auto bg-gray-900 rounded-lg p-4 mb-4 relative"
+        >
+          {messages.length === 0 ? (
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center text-gray-500 w-4/5 pointer-events-none">
+              <FontAwesomeIcon icon={currentFeature.icon} className="text-5xl mb-4" />
+              <h3 className="text-xl font-semibold mb-2">{currentFeature.title}</h3>
+              <p>{currentFeature.placeholder}</p>
+            </div>
+          ) : (
+            messages.map((message, index) => (
+              <div 
+                key={index} 
+                className={`max-w-4/5 rounded-lg p-3 mb-3 ${
+                  message.sender === 'user' 
+                    ? 'bg-indigo-700 text-white ml-auto' 
+                    : 'bg-gray-800 text-gray-200'
+                }`}
+              >
+                {renderMessage(message)}
+              </div>
+            ))
           )}
           
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            <TextField
-              fullWidth
-              label="Research topic, paper title, or keywords"
-              variant="outlined"
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setError(null);
-              }}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <Button 
-              variant="contained" 
-              onClick={handleSearch}
-              disabled={loading}
-              sx={{ minWidth: 120 }}
-            >
-              {loading ? <CircularProgress size={24} /> : 'Search'}
-            </Button>
-          </Box>
-          
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle1" gutterBottom>
-              Data Sources:
-            </Typography>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={sources.arxiv}
-                  onChange={handleSourceChange}
-                  name="arxiv"
-                  color="primary"
-                />
-              }
-              label="arXiv"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={sources.googleScholar}
-                  onChange={handleSourceChange}
-                  name="googleScholar"
-                  color="primary"
-                />
-              }
-              label="Google Scholar"
-            />
-          </Box>
-        </Paper>
+          {isTyping && (
+            <div className="bg-gray-800 rounded-lg p-3 mb-3 text-gray-300 flex items-center">
+              <span className="inline-block mr-1 animate-pulse">•</span>
+              <span className="inline-block mr-1 animate-pulse delay-100">•</span>
+              <span className="inline-block mr-2 animate-pulse delay-200">•</span>
+              Bot is typing...
+            </div>
+          )}
+        </div>
         
-        {loading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-            <CircularProgress />
-            <Typography variant="body1" sx={{ ml: 2 }}>
-              Searching academic databases...
-            </Typography>
-          </Box>
-        )}
-        
-        {results.length > 0 && (
-          <Typography variant="h6" component="h3" gutterBottom>
-            Found {results.length} relevant papers:
-          </Typography>
-        )}
-        
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {results.map((paper, index) => (
-            <Card key={`${paper.id || index}`} elevation={2}>
-              <CardContent>
-                <Typography variant="h6" component="div" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  {paper.title}
-                </Typography>
-                
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>
-                  <Chip 
-                    label={paper.source} 
-                    size="small" 
-                    color="primary"
-                    variant="outlined"
-                  />
-                  {paper.year && (
-                    <Chip 
-                      label={`${paper.year}`} 
-                      size="small" 
-                      variant="outlined" 
-                    />
-                  )}
-                  {paper.citations > 0 && (
-                    <Chip 
-                      label={`${paper.citations} citations`} 
-                      size="small" 
-                      variant="outlined" 
-                    />
-                  )}
-                </Box>
-                
-                {paper.authors?.length > 0 && (
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontStyle: 'italic' }}>
-                    {paper.authors.join(', ')}
-                  </Typography>
-                )}
-                
-                {paper.abstract && (
-                  <Typography variant="body1" paragraph sx={{ mt: 2 }}>
-                    {paper.abstract}
-                  </Typography>
-                )}
-                
-                <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                  {paper.url && (
-                    <Button 
-                      variant="outlined" 
-                      size="small"
-                      href={paper.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                    >
-                      View Paper
-                    </Button>
-                  )}
-                  {paper.pdfUrl && (
-                    <Button 
-                      variant="contained" 
-                      size="small"
-                      href={paper.pdfUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                    >
-                      Download PDF
-                    </Button>
-                  )}
-                </Box>
-              </CardContent>
-            </Card>
-          ))}
-        </Box>
-        
-        {results.length === 0 && !loading && !error && (
-          <Paper elevation={0} sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="body1">
-              Enter a search term to find relevant academic papers
-            </Typography>
-          </Paper>
-        )}
-      </Container>
-    </ThemeProvider>
+        <div className="flex gap-3">
+          <input 
+            type="text" 
+            value={inputValue}
+            onChange={handleInputChange}
+            onKeyPress={handleKeyPress}
+            placeholder={currentFeature.placeholder}
+            className="flex-grow p-3 bg-gray-900 border border-indigo-600 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <button 
+            onClick={sendMessage} 
+            title="Send Message"
+            className="p-3 bg-indigo-700 text-white rounded-lg hover:bg-indigo-600 transition duration-300"
+          >
+            <FontAwesomeIcon icon={faPaperPlane} />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

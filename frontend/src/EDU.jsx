@@ -13,6 +13,8 @@ function EDU() {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const chatBoxRef = useRef(null);
+
+  const API_BASE = import.meta.env.VITE_API
   
   const features = [
     {
@@ -48,10 +50,7 @@ function EDU() {
   }, [messages, isTyping]);
   
   useEffect(() => {
-    // Apply syntax highlighting after component updates
-    if (messages.length > 0) {
-      Prism.highlightAll();
-    }
+    Prism.highlightAll();
   }, [messages]);
   
   const selectFeature = (feature) => {
@@ -66,7 +65,6 @@ function EDU() {
   const sendMessage = async () => {
     if (!inputValue.trim()) return;
     
-    // Add user message
     const userMessage = {
       text: inputValue,
       sender: 'user'
@@ -77,37 +75,50 @@ function EDU() {
     setIsTyping(true);
     
     try {
-      // Make actual API call to backend
-      const response = await fetch('http://localhost:5000/api/chatbot', {
+      const response = await fetch(`${API_BASE}/chatbot`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ 
           feature: selectedFeature, 
-          message: inputValue 
+          message: inputValue,
         })
       });
       
       if (!response.ok) {
-        throw new Error(`Server responded with status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || 
+          `Server responded with status: ${response.status}`
+        );
       }
       
       const data = await response.json();
       
       setMessages(prev => [...prev, {
         text: data.response,
-        sender: 'bot'
+        sender: 'bot',
+        timestamp: new Date().toISOString()
       }]);
     } catch (error) {
       console.error('Error sending message:', error);
+      
+      const errorMessage = error.message.includes('Failed to fetch') 
+        ? 'Network error: Please check your connection'
+        : `Error: ${error.message}`;
+        
       setMessages(prev => [...prev, {
-        text: `Error: Unable to get response. ${error.message}`,
-        sender: 'bot'
+        text: errorMessage,
+        sender: 'bot',
+        isError: true,
+        timestamp: new Date().toISOString()
       }]);
     } finally {
       setIsTyping(false);
     }
   };
-  
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       sendMessage();
@@ -117,7 +128,6 @@ function EDU() {
   const copyCode = (codeText) => {
     navigator.clipboard.writeText(codeText)
       .then(() => {
-        // Could add a toast notification here
         console.log('Code copied to clipboard');
       })
       .catch(err => {
@@ -125,20 +135,15 @@ function EDU() {
       });
   };
   
-  // Function to render message content with code highlighting
   const renderMessage = (message) => {
-    // Check if the message contains code blocks
     if (message.text.includes('```')) {
       const parts = message.text.split(/```(\w+)?\n|```/g);
       return parts.map((part, index) => {
         if (index % 3 === 0) {
-          // Regular text
           return <span key={index}>{part}</span>;
         } else if (index % 3 === 1) {
-          // Language identifier or empty string
           return null;
         } else {
-          // Code block
           const language = parts[index - 1] || 'javascript';
           return (
             <div className="relative bg-gray-900 rounded-lg my-4" key={index}>
@@ -159,7 +164,6 @@ function EDU() {
       });
     }
     
-    // Regular text message
     return message.text;
   };
   

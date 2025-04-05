@@ -1,35 +1,32 @@
-import { useEffect, useState } from 'react';
+import React from 'react';
 import { auth } from './Firebase';
 import { signInWithGoogle, signOut } from './Firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 const Auth = () => {
-  const [user, setUser] = useState(null);
+  const [user, loading, error] = useAuthState(auth);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-    });
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center">
+        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white"></div>
+      </div>
+    );
+  }
 
-    return () => unsubscribe();
-  }, []);
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
 
   return (
     <div className="flex items-center space-x-4">
       {user ? (
-        <>
-          <img 
-            src={user.photoURL} 
-            alt="User" 
-            className="w-8 h-8 rounded-full" 
-          />
-          <button 
-            onClick={signOut}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition duration-200"
-          >
-            Sign Out
-          </button>
-        </>
+        <button 
+          onClick={signOut}
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition duration-200"
+        >
+          Sign Out
+        </button>
       ) : (
         <button 
           onClick={signInWithGoogle}

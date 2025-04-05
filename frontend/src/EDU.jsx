@@ -32,6 +32,8 @@ function EDU() {
   const [isTyping, setIsTyping] = useState(false);
   const [copiedItems, setCopiedItems] = useState({});
   const [shareMenuOpen, setShareMenuOpen] = useState(null);
+  const [userAnswers, setUserAnswers] = useState({});
+  const [quizResults, setQuizResults] = useState(null);
   const chatBoxRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -52,8 +54,8 @@ function EDU() {
       icon: faPuzzlePiece,
       title: 'Quiz Generator',
       description: 'Create topic quizzes',
-      placeholder: 'Enter a topic to generate a quiz',
-      featureDescription: 'Enter a topic to generate a quiz',
+      placeholder: 'Enter a topic to generate a quiz (e.g., "Java basics", "React hooks")',
+      featureDescription: 'Enter a topic to generate an interactive quiz',
       theme: 'bg-purple-700'
     },
     {
@@ -71,11 +73,11 @@ function EDU() {
     if (chatBoxRef.current) {
       chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
     }
-  }, [messages, isTyping]);
+  }, [messages, isTyping, quizResults]);
   
   useEffect(() => {
     Prism.highlightAll();
-  }, [messages]);
+  }, [messages, quizResults]);
   
   // Auto-resize textarea as content grows
   useEffect(() => {
@@ -103,7 +105,6 @@ function EDU() {
   
   // Set up global handler for copy buttons in bot responses
   useEffect(() => {
-    // Function to handle copy button clicks within code-response divs
     const handleCopyCodeResponse = (event) => {
       if (event.target.classList.contains('copy-btn')) {
         const button = event.target;
@@ -145,6 +146,8 @@ function EDU() {
   const selectFeature = (feature) => {
     setSelectedFeature(feature.id);
     setMessages([]);
+    setQuizResults(null);
+    setUserAnswers({});
   };
   
   const handleInputChange = (e) => {
@@ -163,6 +166,8 @@ function EDU() {
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsTyping(true);
+    setQuizResults(null);
+    setUserAnswers({});
     
     try {
       const response = await fetch(`${API_BASE}/chatbot`, {
@@ -186,11 +191,31 @@ function EDU() {
       
       const data = await response.json();
       
-      setMessages(prev => [...prev, {
-        text: data.response,
-        sender: 'bot',
-        timestamp: new Date().toISOString()
-      }]);
+      if (selectedFeature === 'quizzes' && data.response.includes('"quiz":')) {
+        try {
+          const quizData = JSON.parse(data.response);
+          setMessages(prev => [...prev, {
+            text: formatQuizResponse(quizData),
+            sender: 'bot',
+            isQuiz: true,
+            quizData: quizData.quiz,
+            timestamp: new Date().toISOString()
+          }]);
+        } catch (e) {
+          // Fallback if JSON parsing fails
+          setMessages(prev => [...prev, {
+            text: data.response,
+            sender: 'bot',
+            timestamp: new Date().toISOString()
+          }]);
+        }
+      } else {
+        setMessages(prev => [...prev, {
+          text: data.response,
+          sender: 'bot',
+          timestamp: new Date().toISOString()
+        }]);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       
@@ -209,6 +234,14 @@ function EDU() {
     }
   };
 
+  const formatQuizResponse = (quizData) => {
+    if (!quizData.quiz || !quizData.quiz.questions) {
+      return "Here's a quiz on your requested topic:\n\n" + quizData.response;
+    }
+    
+    return `Here's a ${quizData.quiz.questions.length}-question quiz on ${quizData.quiz.topic}:`;
+  };
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -216,13 +249,46 @@ function EDU() {
     }
   };
   
+  const handleAnswerSelect = (questionIndex, answerIndex, quizData) => {
+    setUserAnswers(prev => ({
+      ...prev,
+      [questionIndex]: answerIndex
+    }));
+  };
+
+  const submitQuiz = (quizData) => {
+    if (!quizData.questions) return;
+    
+    let correctAnswers = 0;
+    const results = quizData.questions.map((question, index) => {
+      const isCorrect = userAnswers[index] === question.correctAnswer;
+      if (isCorrect) correctAnswers++;
+      
+      return {
+        question: question.question,
+        userAnswer: question.options[userAnswers[index]],
+        correctAnswer: question.options[question.correctAnswer],
+        isCorrect
+      };
+    });
+    
+    setQuizResults({
+      score: correctAnswers,
+      total: quizData.questions.length,
+      percentage: Math.round((correctAnswers / quizData.questions.length) * 100),
+      details: results
+    });
+  };
+
+  const resetQuiz = () => {
+    setQuizResults(null);
+    setUserAnswers({});
+  };
+
   const copyToClipboard = (text, itemId) => {
     navigator.clipboard.writeText(text)
       .then(() => {
-        // Set this item as copied
         setCopiedItems(prev => ({ ...prev, [itemId]: true }));
-        
-        // Remove the copied status after 2 seconds
         setTimeout(() => {
           setCopiedItems(prev => ({ ...prev, [itemId]: false }));
         }, 2000);
@@ -238,10 +304,8 @@ function EDU() {
     
     if (fileType === 'json') {
       try {
-        // Try to pretty-print if it's valid JSON
         content = JSON.stringify(JSON.parse(text), null, 2);
       } catch (e) {
-        // If parsing fails, use the original text
         console.warn('Could not parse as JSON, downloading as plain text');
       }
       type = "application/json";
@@ -258,7 +322,6 @@ function EDU() {
     document.body.appendChild(a);
     a.click();
     
-    // Clean up
     setTimeout(() => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
@@ -276,7 +339,6 @@ function EDU() {
           text: text
         });
       } else {
-        // Fallback for unsupported methods
         alert('Sharing method not supported on this device');
       }
     } catch (error) {
@@ -284,7 +346,6 @@ function EDU() {
       alert('Failed to share content');
     }
     
-    // Close share menu
     setShareMenuOpen(null);
   };
   
@@ -293,7 +354,6 @@ function EDU() {
   };
   
   const detectLanguage = (text) => {
-    // Simple language detection based on syntax patterns
     if (text.includes('import ') || text.includes('def ') || text.includes('print(')) {
       return 'python';
     } else if (text.includes('function ') || text.includes('const ') || text.includes('let ')) {
@@ -309,7 +369,7 @@ function EDU() {
     } else if (text.includes('#!/bin/')) {
       return 'bash';
     }
-    return 'javascript'; // Default
+    return 'javascript';
   };
   
   const formatTimestamp = (timestamp) => {
@@ -317,48 +377,37 @@ function EDU() {
   };
   
   const renderMarkdown = (text) => {
-    // Process code-response blocks first
     if (text.includes('<div class="code-response">')) {
-      return text; // Keep HTML intact for code-response blocks
+      return text;
     }
     
-    // Headers
     text = text.replace(/^### (.*$)/gm, '<h3 class="text-xl font-bold mb-2 mt-4">$1</h3>');
     text = text.replace(/^## (.*$)/gm, '<h2 class="text-2xl font-bold mb-3 mt-5">$1</h2>');
     text = text.replace(/^# (.*$)/gm, '<h1 class="text-3xl font-bold mb-4 mt-6">$1</h1>');
     
-    // Lists
     text = text.replace(/^\* (.*$)/gm, '<li class="ml-4 list-disc mb-1">$1</li>');
     text = text.replace(/^\d\. (.*$)/gm, '<li class="ml-4 list-decimal mb-1">$1</li>');
     
-    // Wrap lists in ul/ol tags
     text = text.replace(/(<li class="ml-4 list-disc mb-1">.*<\/li>)/gs, '<ul class="my-2">$1</ul>');
     text = text.replace(/(<li class="ml-4 list-decimal mb-1">.*<\/li>)/gs, '<ol class="my-2">$1</ol>');
     
-    // Links
     text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>');
     
-    // Bold and italic
     text = text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>');
     text = text.replace(/\*(.*?)\*/g, '<em class="italic">$1</em>');
     
-    // Inline code
     text = text.replace(/`([^`]+)`/g, '<code class="bg-gray-700 px-1 py-0.5 rounded text-sm font-mono">$1</code>');
     
-    // Blockquotes
     text = text.replace(/^> (.*$)/gm, '<blockquote class="border-l-4 border-gray-500 pl-4 my-2 text-gray-400">$1</blockquote>');
     
-    // Horizontal rule
     text = text.replace(/^---$/gm, '<hr class="my-4 border-gray-600" />');
     
-    // Tables - basic support
     let insideTable = false;
     const lines = text.split('\n');
     
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].startsWith('|') && lines[i].endsWith('|')) {
         if (!insideTable) {
-          // Start table
           lines[i] = '<table class="w-full my-4 border-collapse"><thead><tr>' + 
             lines[i].split('|')
               .filter(cell => cell.trim() !== '')
@@ -367,10 +416,8 @@ function EDU() {
             '</tr></thead>';
           insideTable = true;
           
-          // Skip the separator row
           i++;
           
-          // Start tbody
           lines[i] = '<tbody><tr>' + 
             lines[i].split('|')
               .filter(cell => cell.trim() !== '')
@@ -378,7 +425,6 @@ function EDU() {
               .join('') + 
             '</tr>';
         } else {
-          // Continue table
           lines[i] = '<tr>' + 
             lines[i].split('|')
               .filter(cell => cell.trim() !== '')
@@ -387,25 +433,166 @@ function EDU() {
             '</tr>';
         }
       } else if (insideTable) {
-        // End table
         lines[i-1] += '</tbody></table>';
         insideTable = false;
       }
     }
     
     if (insideTable) {
-      // Close the table if we reach the end
       lines[lines.length-1] += '</tbody></table>';
     }
     
     return lines.join('\n');
   };
   
+  const renderQuiz = (quizData) => {
+    if (!quizData || !quizData.questions) return null;
+    
+    return (
+      <div className="quiz-container bg-gray-800 rounded-lg p-4 my-3">
+        <div className="quiz-header mb-4">
+          <h3 className="text-xl font-bold text-purple-400 mb-1">
+            {quizData.topic ? `Quiz: ${quizData.topic}` : 'Generated Quiz'}
+          </h3>
+          <p className="text-gray-400 text-sm">
+            {quizData.questions.length} multiple-choice questions
+          </p>
+        </div>
+        
+        <div className="questions space-y-6">
+          {quizData.questions.map((question, qIndex) => (
+            <div key={qIndex} className="question bg-gray-900 rounded-lg p-4">
+              <h4 className="font-semibold mb-3 text-gray-200">
+                {qIndex + 1}. {question.question}
+              </h4>
+              
+              <div className="options space-y-2">
+                {question.options.map((option, aIndex) => (
+                  <div 
+                    key={aIndex} 
+                    className={`option p-3 rounded-lg cursor-pointer transition-colors ${
+                      userAnswers[qIndex] === aIndex 
+                        ? 'bg-purple-700 text-white' 
+                        : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                    }`}
+                    onClick={() => handleAnswerSelect(qIndex, aIndex, quizData)}
+                  >
+                    <div className="flex items-center">
+                      <div className={`w-5 h-5 rounded-full border mr-3 flex-shrink-0 flex items-center justify-center ${
+                        userAnswers[qIndex] === aIndex 
+                          ? 'border-white bg-white text-purple-700' 
+                          : 'border-gray-500'
+                      }`}>
+                        {userAnswers[qIndex] === aIndex && (
+                          <div className="w-2 h-2 rounded-full bg-purple-700"></div>
+                        )}
+                      </div>
+                      <span>{option}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="quiz-actions mt-6 flex justify-between">
+          <button 
+            className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+            onClick={resetQuiz}
+          >
+            Reset Quiz
+          </button>
+          <button 
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              Object.keys(userAnswers).length === quizData.questions.length
+                ? 'bg-purple-600 hover:bg-purple-500 text-white'
+                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+            }`}
+            onClick={() => submitQuiz(quizData)}
+            disabled={Object.keys(userAnswers).length !== quizData.questions.length}
+          >
+            Submit Quiz
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderQuizResults = () => {
+    if (!quizResults) return null;
+    
+    return (
+      <div className="quiz-results bg-gray-800 rounded-lg p-4 my-3 border border-purple-600">
+        <div className="results-header mb-4 text-center">
+          <h3 className="text-2xl font-bold text-purple-400 mb-2">
+            Quiz Results
+          </h3>
+          <div className={`text-4xl font-bold mb-2 ${
+            quizResults.percentage >= 70 ? 'text-green-400' : 
+            quizResults.percentage >= 50 ? 'text-yellow-400' : 'text-red-400'
+          }`}>
+            {quizResults.percentage}%
+          </div>
+          <p className="text-gray-400">
+            You scored {quizResults.score} out of {quizResults.total}
+          </p>
+        </div>
+        
+        <div className="results-details space-y-4">
+          {quizResults.details.map((result, index) => (
+            <div 
+              key={index} 
+              className={`result p-3 rounded-lg ${
+                result.isCorrect ? 'bg-green-900 bg-opacity-30' : 'bg-red-900 bg-opacity-30'
+              }`}
+            >
+              <div className="font-semibold mb-1">
+                {index + 1}. {result.question}
+              </div>
+              <div className="text-sm">
+                <div className={`mb-1 ${result.isCorrect ? 'text-green-300' : 'text-red-300'}`}>
+                  {result.isCorrect ? '✓ Correct' : '✗ Incorrect'}
+                </div>
+                {!result.isCorrect && (
+                  <div className="mb-1">
+                    <span className="text-gray-400">Your answer: </span>
+                    <span className="text-red-300">{result.userAnswer}</span>
+                  </div>
+                )}
+                <div>
+                  <span className="text-gray-400">Correct answer: </span>
+                  <span className="text-green-300">{result.correctAnswer}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="results-actions mt-6 text-center">
+          <button 
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-500 transition-colors"
+            onClick={resetQuiz}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const renderMessageContent = (message, index) => {
-    // Generate a unique ID for this message to track copy state
     const messageId = `msg-${index}-${message.timestamp}`;
     
-    // Check for HTML code-response blocks first
+    if (message.isQuiz && message.quizData) {
+      return (
+        <div className="quiz-message">
+          {renderMarkdown(message.text)}
+          {!quizResults ? renderQuiz(message.quizData) : renderQuizResults()}
+        </div>
+      );
+    }
+    
     if (message.text.includes('<div class="code-response">')) {
       return (
         <div
@@ -415,7 +602,6 @@ function EDU() {
       );
     }
     
-    // Check for code blocks
     if (message.text.includes('```')) {
       const parts = message.text.split(/```(\w+)?\n|```/g);
       return parts.map((part, i) => {
@@ -477,7 +663,6 @@ function EDU() {
       });
     }
     
-    // Regular text with markdown and copy/share buttons
     return (
       <div className="relative group">
         <div 
@@ -635,7 +820,7 @@ function EDU() {
                 <div className={`flex items-center mt-1 text-xs ${
                   message.sender === 'user' ? 'justify-end' : 'justify-between'
                 }`}>
-                  {message.sender === 'bot' && (
+                  {message.sender === 'bot' && !message.isQuiz && (
                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button 
                         className="p-1 text-gray-400 hover:text-green-400 transition-colors"
@@ -706,7 +891,6 @@ function EDU() {
         </div>
       </div>
       
-      {/* Add global styles */}
       <style jsx>{`
         @keyframes fadeInOut {
           0% { opacity: 0; }
@@ -718,7 +902,6 @@ function EDU() {
           animation: fadeInOut 2s ease-in-out;
         }
         
-        /* Code response styles */
         .code-response {
           background-color: #1e293b;
           border-radius: 0.5rem;
@@ -753,15 +936,12 @@ function EDU() {
         
         .code-block .copy-btn:hover {
           background-color: #475569;
-          .code-block .copy-btn:hover {
-          background-color: #475569;
         }
         
         .code-block .copy-btn.copied {
           background-color: #10b981;
         }
         
-        /* Code highlighting override styles */
         .token.comment,
         .token.prolog,
         .token.doctype,
@@ -814,7 +994,6 @@ function EDU() {
           color: #f43f5e;
         }
         
-        /* Message content styles */
         .message-content h1,
         .message-content h2,
         .message-content h3 {
@@ -853,6 +1032,50 @@ function EDU() {
           background-color: #1e293b;
           padding: 0.125rem 0.25rem;
           border-radius: 0.25rem;
+        }
+        
+        /* Quiz specific styles */
+        .quiz-container {
+          border: 1px solid #4c1d95;
+        }
+        
+        .quiz-header {
+          border-bottom: 1px solid #4c1d95;
+          padding-bottom: 0.5rem;
+        }
+        
+        .question {
+          border: 1px solid #3b0764;
+        }
+        
+        .option {
+          transition: background-color 0.2s, transform 0.1s;
+        }
+        
+        .option:hover {
+          transform: translateX(2px);
+        }
+        
+        .quiz-actions button {
+          transition: all 0.2s;
+        }
+        
+        .quiz-results {
+          box-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
+        }
+        
+        .results-header {
+          border-bottom: 1px solid #6d28d9;
+          padding-bottom: 1rem;
+        }
+        
+        .result {
+          border-left: 3px solid;
+          border-color: #10b981;
+        }
+        
+        .result:not(.correct) {
+          border-color: #ef4444;
         }
       `}</style>
     </div>

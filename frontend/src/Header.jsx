@@ -31,8 +31,9 @@ const Header = () => {
             <svg className="w-8 h-8 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
             </svg>
-            <span className="ml-2 text-xl font-bold text-white">INVO AI</span>
+            <span className="ml-2 text-xl font-bold text-white">OmniTask</span>
           </NavLink>
+            
         </div>
         
         {/* Desktop Navigation */}
@@ -49,6 +50,43 @@ const Header = () => {
           >
             Home
           </NavLink>
+          <NavLink
+            to="/health"
+            className={({isActive}) => 
+              `px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                isActive 
+                  ? 'text-blue-400 bg-blue-900 bg-opacity-30' 
+                  : 'text-gray-200 hover:text-white hover:bg-white hover:bg-opacity-10'
+              }`
+            }
+          >
+           Health
+          </NavLink>
+          <NavLink
+            to="/edu"
+            className={({isActive}) => 
+              `px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                isActive 
+                  ? 'text-blue-400 bg-blue-900 bg-opacity-30' 
+                  : 'text-gray-200 hover:text-white hover:bg-white hover:bg-opacity-10'
+              }`
+            }
+          >
+           Education
+          </NavLink>
+          <NavLink
+            to="/research"
+            className={({isActive}) => 
+              `px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                isActive 
+                  ? 'text-blue-400 bg-blue-900 bg-opacity-30' 
+                  : 'text-gray-200 hover:text-white hover:bg-white hover:bg-opacity-10'
+              }`
+            }
+          >
+            Research
+          </NavLink>
+          
           
          
           

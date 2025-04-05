@@ -18,7 +18,7 @@ const config = {
 };
 
 // API Keys
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyCRQc17Q0ljGxlo5nAVvIVwzE3OOFZbqow";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyBWFN_OFWuk5mX995cuJAyzq7DzjvD5ELs";
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);

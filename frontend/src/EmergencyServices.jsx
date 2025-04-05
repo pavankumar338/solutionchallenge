@@ -11,7 +11,7 @@ const EmergencyServices = () => {
   const placesServiceRef = useRef(null);
 
   // Replace this with your API key or use environment variable
-  const googleMapsApiKey = " AIzaSyDBRvts55sYzQ0hcPcF0qp6ApnwW-hHmYo"; // Better to use process.env.REACT_APP_GOOGLE_MAPS_API_KEY
+  const googleMapsApiKey = import.meta.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
   const mapContainerStyle = {
     width: '100%',

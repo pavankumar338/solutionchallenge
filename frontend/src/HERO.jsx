@@ -285,7 +285,7 @@ const HERO = () => {
           />
         </motion.div>
         
-        {/* Lower section with left and right sides */}
+        {/* Lower section with three features */}
         <div className="relative w-full">
           <div className="flex justify-between items-start">
             {/* Left side - Purple section - Health Services */}
@@ -354,8 +354,69 @@ const HERO = () => {
               </motion.div>
             </motion.div>
             
-            {/* Center placeholder */}
-            <div className="w-1/3"></div>
+            {/* Center - Research Section */}
+            <motion.div 
+              className="w-1/3 flex flex-col items-center relative z-20"
+              variants={fadeIn}
+              transition={{ delay: 1.6 }}
+            >
+              <motion.div 
+                className="w-24 h-24 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg hover:shadow-xl mb-4 cursor-pointer overflow-hidden transition-all duration-300"
+                variants={popIn}
+                transition={{ delay: 1.8 }}
+                whileHover={{ 
+                  scale: 1.05,
+                  rotate: 5,
+                  boxShadow: "0 20px 25px -5px rgba(16, 185, 129, 0.25), 0 10px 10px -5px rgba(16, 185, 129, 0.1)"
+                }}
+                onClick={() => navigate('/research')}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-emerald-400/20 animate-pulse" />
+                
+                <div className="text-white relative flex flex-col items-center justify-center">
+                  <motion.svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 24 24" 
+                    fill="currentColor" 
+                    className="w-10 h-10"
+                    animate={{ 
+                      scale: [1, 1.1, 1],
+                      transition: { duration: 2, repeat: Infinity, repeatType: "reverse" }
+                    }}
+                  >
+                    <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.591zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.591 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.592-1.591zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.591 1.591z" />
+                  </motion.svg>
+                  <span className="text-xs font-medium mt-1">RESEARCH</span>
+                </div>
+              </motion.div>
+              
+              <motion.div 
+                className="mt-24"
+                variants={slideUp}
+                transition={{ delay: 2.0 }}
+              >
+                <motion.div 
+                  className="bg-white/90 backdrop-blur-sm border border-green-100 rounded-xl p-5 shadow-md hover:shadow-xl w-72 cursor-pointer transition-all duration-300"
+                  whileHover={{ 
+                    y: -5,
+                    boxShadow: "0 15px 30px -5px rgba(16, 185, 129, 0.15), 0 10px 10px -5px rgba(16, 185, 129, 0.1)"
+                  }}
+                  onClick={() => navigate('/research')}
+                >
+                  <div className="flex items-center justify-center mb-3">
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-green-600">
+                        <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <h3 className="font-semibold text-center text-gray-800 mb-1">Research Hub</h3>
+                  <p className="text-green-600 text-center text-sm">
+                    Studies and innovation resources
+                  </p>
+                </motion.div>
+              </motion.div>
+            </motion.div>
             
             {/* Right side - Pink section - Education */}
             <motion.div 
@@ -387,7 +448,7 @@ const HERO = () => {
                       transition: { duration: 2, repeat: Infinity, repeatType: "reverse" } 
                     }}
                   >
-                    <path d="M11.7 2.805a.75.75 0 01.6 0A60.65 60.65 0 0122.83 8.72a.75.75 0 01-.231 1.337 49.949 49.949 0 00-9.902 3.912l-.003.002-.34.18a.75.75 0 01-.707 0A50.009 50.009 0 007.5 12.174v-.224c0-.131.067-.248.172-.311a54.614 54.614 0 014.653-2.52.75.75 0 00-.65-1.352 56.129 56.129 0 00-4.78 2.589 1.5 1.5 0 00-.82 1.317v.224a6 6 0 003.318 5.376l.04.025c.149.074.39.231.555.325.214.13.405.246.579.347.174.1.332.193.477.273.291.16.51.276.694.345a.75.75 0 01.139.116 8.278 8.278 0 00.229.228z" />
+                    <path d="M11.7 2.805a.75.75 0 01.6 0A60.65 60.65 0 0122.83 8.72a.75.75 0 01-.231 1.337 49.949 49.949 0 00-9.902 3.912l-.003.002-.34.18a.75.75 0 01-.707 0A50.009 50.009 0 007.5 12.174v-.224c0-.131.067-.248.172-.311a54.614 54.614 0 014.653-2.52.75.75 0 00-.65-1.352 56.129 56.129 0 00-4.78 2.589 1.5 1.5 0 00-.82 1.317v.224a6 6 0 003.318 5.376l.04.025c.149.074.39.231.555.325.214.13.405.246.579.347.174.1.332.193.477.273.291.16.51.276.694.345a.752.752 0 01.139.116 8.278 8.278 0 00.229.228z" />
                     <path fillRule="evenodd" d="M15.75 11.25a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zm-8.25-.75a.75.75 0 01.75-.75h4.5a.75.75 0 010 1.5h-4.5a.75.75 0 01-.75-.75z" clipRule="evenodd" />
                   </motion.svg>
                   
@@ -411,7 +472,7 @@ const HERO = () => {
                   <div className="flex items-center justify-center mb-3">
                     <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-pink-600">
-                        <path d="M11.7 2.805a.75.75 0 01.6 0A60.65 60.65 0 0122.83 8.72a.75.75 0 01-.231 1.337 49.949 49.949 0 00-9.902 3.912l-.003.002-.34.18a.75.75 0 01-.707 0A50.009 50.009 0 007.5 12.174v-.224c0-.131.067-.248.172-.311a54.614 54.614 0 014.653-2.52.75.75 0 00-.65-1.352 56.129 56.129 0 00-4.78 2.589 1.5 1.5 0 00-.82 1.317v.224a6 6 0 003.318 5.376l.04.025c.149.074.39.231.555.325.214.13.405.246.579.347.174.1.332.193.477.273.291.16.51.276.694.345a.75.75 0 01.139.116 8.278 8.278 0 00.229.228z" />
+                        <path d="M11.7 2.805a.75.75 0 01.6 0A60.65 60.65 0 0122.83 8.72a.75.75 0 01-.231 1.337 49.949 49.949 0 00-9.902 3.912l-.003.002-.34.18a.75.75 0 01-.707 0A50.009 50.009 0 007.5 12.174v-.224c0-.131.067-.248.172-.311a54.614 54.614 0 014.653-2.52.75.75 0 00-.65-1.352 56.129 56.129 0 00-4.78 2.589 1.5 1.5 0 00-.82 1.317v.224a6 6 0 003.318 5.376l.04.025c.149.074.39.231.555.325.214.13.405.246.579.347.174.1.332.193.477.273.291.16.51.276.694.345a.752.752 0 01.139.116 8.278 8.278 0 00.229.228z" />
                       </svg>
                     </div>
                   </div>
@@ -438,6 +499,10 @@ const HERO = () => {
                 <stop offset="0%" stopColor="#7C3AED" />
                 <stop offset="100%" stopColor="#8B5CF6" />
               </linearGradient>
+              <linearGradient id="greenGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#10B981" />
+                <stop offset="100%" stopColor="#34D399" />
+              </linearGradient>
               <linearGradient id="pinkGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#EC4899" />
                 <stop offset="100%" stopColor="#F472B6" />
@@ -448,6 +513,7 @@ const HERO = () => {
               </filter>
             </defs>
             
+            {/* Purple connection */}
             <motion.path 
               d="M130 70 Q 400 220 670 70" 
               stroke="url(#purpleGradient)" 
@@ -455,33 +521,23 @@ const HERO = () => {
               strokeLinecap="round"
               filter="url(#glow)"
               fill="none" 
-              strokeDasharray="0"
               variants={drawLine}
               transition={{ duration: 1.4, delay: 2.0 }}
             />
-            <motion.circle 
-              cx="130" 
-              cy="70" 
-              r="5" 
-              fill="#7C3AED"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 2.2 }}
-            />
-            <motion.circle 
-              cx="400" 
-              cy="130" 
-              r="5" 
-              fill="#7C3AED"
-              initial={{ scale: 0 }}
-              animate={{
-                scale: 1,
-                opacity: [0.6, 1, 0.6],
-                transition: { duration: 2, repeat: Infinity, repeatType: "reverse" } 
-              }}
-              transition={{ delay: 2.4 }}
+            
+            {/* Green connection */}
+            <motion.path 
+              d="M400 70 Q 400 150 400 230" 
+              stroke="url(#greenGradient)" 
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              filter="url(#glow)"
+              fill="none" 
+              variants={drawLine}
+              transition={{ duration: 1.4, delay: 2.2 }}
             />
             
+            {/* Pink connection */}
             <motion.path 
               d="M670 70 Q 400 220 130 70" 
               stroke="url(#pinkGradient)" 
@@ -489,31 +545,8 @@ const HERO = () => {
               strokeLinecap="round"
               filter="url(#glow)"
               fill="none" 
-              strokeDasharray="0"
               variants={drawLine}
-              transition={{ duration: 1.4, delay: 2.1 }}
-            />
-          <motion.circle 
-              cx="670" 
-              cy="70" 
-              r="5" 
-              fill="#EC4899"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 2.3 }}
-            />
-            <motion.circle 
-              cx="400" 
-              cy="130" 
-              r="5" 
-              fill="#EC4899"
-              initial={{ scale: 0 }}
-              animate={{
-                scale: 1,
-                opacity: [0.6, 1, 0.6],
-                transition: { duration: 2, repeat: Infinity, repeatType: "reverse" } 
-              }}
-              transition={{ delay: 2.5 }}
+              transition={{ duration: 1.4, delay: 2.4 }}
             />
           </motion.svg>
         </div>

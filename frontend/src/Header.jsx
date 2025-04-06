@@ -7,6 +7,7 @@ const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('');
   
   // Handle scroll effect
   useEffect(() => {
@@ -17,6 +18,12 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Add animation for mobile menu
+  const handleNavClick = (section) => {
+    setActiveSection(section);
+    setTimeout(() => setIsOpen(false), 400); // Delay closing to show animation
+  };
 
   return (
     <header className={`sticky top-0 z-50 transition-all duration-300 ${
@@ -33,7 +40,6 @@ const Header = () => {
             </svg>
             <span className="ml-2 text-xl font-bold text-white">OmniTask</span>
           </NavLink>
-            
         </div>
         
         {/* Desktop Navigation */}
@@ -86,14 +92,6 @@ const Header = () => {
           >
             Research
           </NavLink>
-          
-          
-         
-          
-        
-          
-         
-          
         </nav>
         
         {/* Auth buttons and mobile menu toggle */}
@@ -111,14 +109,14 @@ const Header = () => {
         
         {/* Mobile Navigation Overlay */}
         {isOpen && (
-          <div className="md:hidden fixed inset-0 z-50 bg-black bg-opacity-95">
+          <div className="md:hidden fixed inset-0 z-50 bg-gradient-to-b from-black to-blue-950">
             <div className="container mx-auto px-6 py-8">
               <div className="flex justify-between items-center mb-8">
                 <NavLink to="/" className="flex items-center" onClick={() => setIsOpen(false)}>
                   <svg className="w-8 h-8 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                   </svg>
-                  <span className="ml-2 text-xl font-bold text-white">INVO AI</span>
+                  <span className="ml-2 text-xl font-bold text-white">OmniTask</span>
                 </NavLink>
                 <button
                   className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors"
@@ -133,19 +131,78 @@ const Header = () => {
                 <NavLink
                   to="/"
                   className={({isActive}) => 
-                    `px-4 py-3 rounded-lg font-medium text-lg transition-all duration-300 ${
-                      isActive 
-                        ? 'text-blue-400 bg-blue-900 bg-opacity-30' 
-                        : 'text-gray-200 hover:text-white hover:bg-white hover:bg-opacity-10'
+                    `px-4 py-4 rounded-xl font-medium text-lg transition-all duration-300 transform ${
+                      isActive || activeSection === 'home'
+                        ? 'text-white bg-gradient-to-r from-blue-800 to-blue-600 scale-105 shadow-lg' 
+                        : 'text-gray-200 hover:text-white hover:bg-blue-900 hover:bg-opacity-40 hover:scale-105'
                     }`
                   }
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => handleNavClick('home')}
                 >
-                  Home
+                  <div className="flex items-center">
+                    <span className="text-lg">Home</span>
+                    <div className="ml-auto opacity-60 bg-blue-300 bg-opacity-20 rounded-full w-8 h-8 flex items-center justify-center">
+                      <ChevronDown size={18} className={`transition-transform ${activeSection === 'home' ? 'rotate-180' : ''}`} />
+                    </div>
+                  </div>
                 </NavLink>
-
-               
-              
+                
+                <NavLink
+                  to="/edu"
+                  className={({isActive}) => 
+                    `px-4 py-4 rounded-xl font-medium text-lg transition-all duration-300 transform ${
+                      isActive || activeSection === 'edu'
+                        ? 'text-white bg-gradient-to-r from-green-800 to-green-600 scale-105 shadow-lg' 
+                        : 'text-gray-200 hover:text-white hover:bg-green-900 hover:bg-opacity-40 hover:scale-105'
+                    }`
+                  }
+                  onClick={() => handleNavClick('edu')}
+                >
+                  <div className="flex items-center">
+                    <span className="text-lg">Education</span>
+                    <div className="ml-auto opacity-60 bg-green-300 bg-opacity-20 rounded-full w-8 h-8 flex items-center justify-center">
+                      <ChevronDown size={18} className={`transition-transform ${activeSection === 'edu' ? 'rotate-180' : ''}`} />
+                    </div>
+                  </div>
+                </NavLink>
+                
+                <NavLink
+                  to="/health"
+                  className={({isActive}) => 
+                    `px-4 py-4 rounded-xl font-medium text-lg transition-all duration-300 transform ${
+                      isActive || activeSection === 'health'
+                        ? 'text-white bg-gradient-to-r from-purple-800 to-purple-600 scale-105 shadow-lg' 
+                        : 'text-gray-200 hover:text-white hover:bg-purple-900 hover:bg-opacity-40 hover:scale-105'
+                    }`
+                  }
+                  onClick={() => handleNavClick('health')}
+                >
+                  <div className="flex items-center">
+                    <span className="text-lg">Health</span>
+                    <div className="ml-auto opacity-60 bg-purple-300 bg-opacity-20 rounded-full w-8 h-8 flex items-center justify-center">
+                      <ChevronDown size={18} className={`transition-transform ${activeSection === 'health' ? 'rotate-180' : ''}`} />
+                    </div>
+                  </div>
+                </NavLink>
+                
+                <NavLink
+                  to="/research"
+                  className={({isActive}) => 
+                    `px-4 py-4 rounded-xl font-medium text-lg transition-all duration-300 transform ${
+                      isActive || activeSection === 'research'
+                        ? 'text-white bg-gradient-to-r from-red-800 to-red-600 scale-105 shadow-lg' 
+                        : 'text-gray-200 hover:text-white hover:bg-red-900 hover:bg-opacity-40 hover:scale-105'
+                    }`
+                  }
+                  onClick={() => handleNavClick('research')}
+                >
+                  <div className="flex items-center">
+                    <span className="text-lg">Research</span>
+                    <div className="ml-auto opacity-60 bg-red-300 bg-opacity-20 rounded-full w-8 h-8 flex items-center justify-center">
+                      <ChevronDown size={18} className={`transition-transform ${activeSection === 'research' ? 'rotate-180' : ''}`} />
+                    </div>
+                  </div>
+                </NavLink>
               </nav>
               
               <div className="mt-8 pt-6 border-t border-gray-800">

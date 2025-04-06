@@ -172,19 +172,20 @@ const HealthAssistant = () => {
     }
   };
 
-  // Enhanced styling variables
-  const primaryColor = 'bg-green-600';
-  const primaryHoverColor = 'hover:bg-green-700';
-  const secondaryColor = 'bg-blue-600';
-  const secondaryHoverColor = 'hover:bg-blue-700';
-  const dangerColor = 'bg-red-600';
-  const dangerHoverColor = 'hover:bg-red-700';
-  const textColor = 'text-gray-800';
-  const lightBg = 'bg-gray-50';
-  const whiteBg = 'bg-white';
-  const rounded = 'rounded-lg';
-  const shadow = 'shadow-md';
-  const transition = 'transition-all duration-300';
+ 
+const primaryColor = 'bg-teal-600';         
+const primaryHoverColor = 'hover:bg-teal-700';
+const secondaryColor = 'bg-blue-500';       
+const secondaryHoverColor = 'hover:bg-blue-600';
+const dangerColor = 'bg-rose-600';          
+const dangerHoverColor = 'hover:bg-rose-700';
+
+const textColor = 'text-gray-800';          
+const lightBg = 'bg-gray-50';              
+const whiteBg = 'bg-gradient-to-br from-blue-50 to-teal-50'; 
+const rounded = 'rounded-xl';              
+const shadow = 'shadow-lg';                 
+const transition = 'transition-all duration-300 ease-in-out';  
 
   return (
     <div className={`flex flex-col min-h-screen max-w-4xl mx-auto p-4 ${lightBg}`}>

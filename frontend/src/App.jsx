@@ -21,18 +21,39 @@ const PrivateRoute = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    </div>
+  );
+  
   return user ? children : <Navigate to="/" />;
 };
 
 const App = () => {
+  // Check for mobile device to adjust touch targets
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkIfMobile);
+    };
+  }, []);
+
   return (
-    <div className='bg-gradient-to-r from-slate-500 to-black min-h-screen'>
+    <div className='min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-800 text-gray-100'>
       <Header>
         <Auth />
       </Header>
 
-      <main className="container mx-auto p-4">
+      <main className="container mx-auto px-4 py-8 md:py-12">
         <Routes>
           <Route path="/" element={<HERO />} />
           
@@ -40,8 +61,8 @@ const App = () => {
             path="/health"
             element={
               <PrivateRoute>
-                <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-lg p-6 shadow-lg">
-                  <HealthAssistant />
+                <div className={`bg-white/5 backdrop-blur-lg rounded-xl ${isMobile ? 'p-3' : 'p-4 md:p-6'} shadow-xl border border-white/10`}>
+                  <HealthAssistant isMobile={isMobile} />
                 </div>
               </PrivateRoute>
             }
@@ -51,8 +72,8 @@ const App = () => {
             path="/edu"
             element={
               <PrivateRoute>
-                <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-lg p-6 shadow-lg">
-                  <EDU />
+                <div className={`bg-white/5 backdrop-blur-lg rounded-xl ${isMobile ? 'p-3' : 'p-4 md:p-6'} shadow-xl border border-white/10`}>
+                  <EDU isMobile={isMobile} />
                 </div>
               </PrivateRoute>
             }
@@ -62,8 +83,8 @@ const App = () => {
             path="/research"
             element={
               <PrivateRoute>
-                <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-lg p-6 shadow-lg">
-                  <RESEARCH />
+                <div className={`bg-white/5 backdrop-blur-lg rounded-xl ${isMobile ? 'p-3' : 'p-4 md:p-6'} shadow-xl border border-white/10`}>
+                  <RESEARCH isMobile={isMobile} />
                 </div>
               </PrivateRoute>
             }
@@ -72,6 +93,13 @@ const App = () => {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
+
+      {/* Mobile-specific footer or navigation */}
+      {isMobile && (
+        <div className="fixed bottom-0 left-0 right-0 bg-gray-800/90 backdrop-blur-sm p-2 flex justify-around items-center border-t border-gray-700">
+          {/* Add mobile navigation buttons here */}
+        </div>
+      )}
     </div>
   );
 };

@@ -172,20 +172,19 @@ const HealthAssistant = () => {
     }
   };
 
- 
-const primaryColor = 'bg-teal-600';         
-const primaryHoverColor = 'hover:bg-teal-700';
-const secondaryColor = 'bg-blue-500';       
-const secondaryHoverColor = 'hover:bg-blue-600';
-const dangerColor = 'bg-rose-600';          
-const dangerHoverColor = 'hover:bg-rose-700';
-
-const textColor = 'text-gray-800';          
-const lightBg = 'bg-gray-50';              
-const whiteBg = 'bg-gradient-to-br from-blue-50 to-teal-50'; 
-const rounded = 'rounded-xl';              
-const shadow = 'shadow-lg';                 
-const transition = 'transition-all duration-300 ease-in-out';  
+  // Enhanced styling variables
+  const primaryColor = 'bg-green-600';
+  const primaryHoverColor = 'hover:bg-green-700';
+  const secondaryColor = 'bg-blue-600';
+  const secondaryHoverColor = 'hover:bg-blue-700';
+  const dangerColor = 'bg-red-600';
+  const dangerHoverColor = 'hover:bg-red-700';
+  const textColor = 'text-black';
+  const lightBg = 'bg-gray-50';
+  const whiteBg = 'bg-white';
+  const rounded = 'rounded-lg';
+  const shadow = 'shadow-md';
+  const transition = 'transition-all duration-300';
 
   return (
     <div className={`flex flex-col min-h-screen max-w-4xl mx-auto p-4 ${lightBg}`}>
@@ -354,7 +353,7 @@ const transition = 'transition-all duration-300 ease-in-out';
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="How are you feeling today?"
                 disabled={isLoading}
-                className={`flex-1 p-3 border border-gray-300 ${rounded} focus:outline-none focus:ring-2 focus:ring-green-500 ${transition}`}
+                className={`flex-1 p-3 border border-gray-300 ${rounded} focus:outline-none focus:ring-2 text-black focus:ring-green-500 ${transition}`}
               />
               <button 
                 type="submit" 
@@ -397,7 +396,7 @@ const transition = 'transition-all duration-300 ease-in-out';
                 onChange={(e) => setCurrentSymptom(e.target.value)}
                 placeholder="e.g. headache, nausea, fever"
                 onKeyPress={(e) => e.key === 'Enter' && addSymptom()}
-                className={`flex-1 p-3 border border-gray-300 ${rounded} focus:outline-none focus:ring-2 focus:ring-green-500 ${transition}`}
+                className={`flex-1 p-3 border border-gray-300 ${rounded} focus:outline-none focus:ring-2 text-black focus:ring-green-500 ${transition}`}
               />
               <button 
                 onClick={addSymptom}
@@ -413,13 +412,13 @@ const transition = 'transition-all duration-300 ease-in-out';
             {symptoms.length > 0 && (
               <>
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-2 flex items-center">
+                  <h3 className="text-lg font-semibold mb-2 flex items-center text-green-500">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                     Your Symptoms:
                   </h3>
-                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-red-600">
                     {symptoms.map((symptom, index) => (
                       <li 
                         key={index}
@@ -454,7 +453,7 @@ const transition = 'transition-all duration-300 ease-in-out';
                       <div className="space-y-4">
                         {symptomAnalysis.conditions && (
                           <div>
-                            <h4 className="font-semibold flex items-center">
+                            <h4 className="font-semibold flex items-center text-black">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
@@ -462,7 +461,7 @@ const transition = 'transition-all duration-300 ease-in-out';
                             </h4>
                             <ul className="list-disc pl-5 space-y-1 mt-1">
                               {symptomAnalysis.conditions.map((cond, i) => (
-                                <li key={i} className="hover:text-green-700 transition-colors">
+                                <li key={i} className="hover:text-green-700 transition-colors text-black">
                                   <strong>{cond.name}</strong> {cond.probability && `(${cond.probability})`}
                                   {cond.description && ` - ${cond.description}`}
                                 </li>
@@ -497,7 +496,7 @@ const transition = 'transition-all duration-300 ease-in-out';
                             </h4>
                             <ul className="list-disc pl-5 space-y-1 mt-1">
                               {symptomAnalysis.recommendations.map((rec, i) => (
-                                <li key={i} className="hover:text-blue-700 transition-colors">{rec}</li>
+                                <li key={i} className="hover:text-blue-700 transition-colors text-black">{rec}</li>
                               ))}
                             </ul>
                           </div>
